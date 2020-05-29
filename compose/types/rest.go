@@ -1,8 +1,14 @@
 package types
 
+import (
+	"fmt"
+	"strconv"
+)
+
 type (
 	BulkRecord struct {
 		RefField string    `json:"refField,omitempty"`
+		IDPrefix string    `json:"idPrefix,omitempty"`
 		Set      RecordSet `json:"set,omitempty"`
 	}
 
@@ -11,6 +17,8 @@ type (
 
 func (set BulkRecordSet) ToBulkOperations(dftModule uint64, dftNamespace uint64) (oo []*BulkRecordOperation, err error) {
 	for _, br := range set {
+		// can't use for loop's index, since some records can already have an ID
+		i := 0
 		for _, rr := range br.Set {
 			// No use in allowing cross-namespace record creation.
 			rr.NamespaceID = dftNamespace
@@ -23,6 +31,12 @@ func (set BulkRecordSet) ToBulkOperations(dftModule uint64, dftNamespace uint64)
 				Record:    rr,
 				Operation: OperationTypeUpdate,
 				LinkBy:    br.RefField,
+			}
+
+			if rr.ID == 0 {
+				b.ID = fmt.Sprintf("%s:%d", br.IDPrefix, i)
+			} else {
+				b.ID = strconv.FormatUint(rr.ID, 10)
 			}
 
 			// If no RecordID is defined, we should create it

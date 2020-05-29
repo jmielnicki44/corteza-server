@@ -17,6 +17,7 @@ type (
 		Record    *Record
 		LinkBy    string
 		Operation OperationType
+		ID        string
 	}
 
 	// Record is a stored row in the `record` table

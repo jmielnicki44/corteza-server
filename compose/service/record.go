@@ -505,8 +505,7 @@ func (svc record) Bulk(oo ...*types.BulkRecordOperation) (rr types.RecordSet, er
 			if rve := types.IsRecordValueErrorSet(err); rve != nil {
 				// Attach additional meta to each value error for FE identification
 				for _, re := range rve.Set {
-					re.Meta["resource"] = res
-					re.Meta["item"] = ctr[res]
+					re.Meta["id"] = p.ID
 
 					rves.Push(re)
 				}
@@ -534,6 +533,12 @@ func (svc record) Bulk(oo ...*types.BulkRecordOperation) (rr types.RecordSet, er
 
 		return nil
 	})
+
+	// no need for another round of action recording, since it was already
+	// done in the
+	if _, ok := err.(*types.RecordValueErrorSet); ok {
+		return nil, err
+	}
 
 	if len(oo) == 1 {
 		// was not really a bulk operation and we already recorded the action
